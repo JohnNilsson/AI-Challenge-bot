@@ -1,4 +1,7 @@
 LAND_TYPES = {"WATER", "LAND", "ANT", "DEAD", "FOOD", "HILL"}
+UNPASSABLE = {"WATER"}
+UNOCCUPIED = {"LAND", "HILL", "DEAD"}
+OCCUPIED   = {"WATER", "ANT", "FOOD"}
 
 # a holder for game information - map size, etc.
 CONFIG =
@@ -7,6 +10,22 @@ CONFIG =
   cols : 0
   turn : 0
 
+MAP_COMMANDS =
+    # water
+    w: (x,y)       -> handler.water(x,y)
+
+    # food
+    f: (x,y)       -> handler.food(x,y)
+
+    # hill
+    h: (x,y,owner) -> handler.hill(x,y)
+
+    # ant
+    a: (x,y,owner) -> handler.ant(x,y,owner)
+
+    # dead ant
+    d: (x,y,owner) -> handler.dead_ant(x,y,owner)
+
 # a list of constants of possible config commands provided
 CONFIG_COMMANDS = [
    "loadtime", "turntime", "rows", "cols",
@@ -14,37 +33,57 @@ CONFIG_COMMANDS = [
    "attackradius2", "spawnradius2"
 ]
 
+Map =
+  LAND =
+    type: LAND_TYPES.LAND
+    water: []
+    pos: []
 
-class Game
-  constructor: -> @MAP = new Map()
+  type: (x,y) -> 
+    (@[x][y] ? water[x][y] ? LAND).type
 
-  class Map
-    constructor: ->
-      # a holder for all water seen since the start
-      # each turn the game engine introduces only water
-      # which hadn't been seen so far
-      @seen_water = []
+  normalize: (coord, max) -> 
+    if coord < 0 then max + coord
+    else if coord > max then coord - max
+    else coord
+  
+  normalize_x: (x) -> normalize(x,CONFIG.rows)
+  normalize_y: (y) -> normalize(y,CONFIG.cols)
 
-    reset: ->
-      # set all the map to "is_land"
-      for x in [0...CONFIG.rows]
-        for y in [0...CONFIG.cols]
-          if y is 0
-            @[x] = []
-          @[x][y] = new Location [x, y], type=LAND_TYPES.LAND
+  reset: ->
+    pos.length = 0
+    # set all the map to "is_land"
+    for x in [0...CONFIG.rows]
+      for y in [0...CONFIG.cols]
+        if y is 0
+          @[x] = []
+        @[x][y] = new Location [x, y], type=LAND_TYPES.LAND
 
-      # add the water seen so far
-      for w in @seen_water
-        @[w.x][w.y] = w
+    # add the water seen so far
+    for w in @seen_water
+      @[w.x][w.y] = w
 
-    search: (fn) ->
-      result = []
-      for x in [0...CONFIG.rows]
-        for y in [0...CONFIG.cols]
-           if fn(@[x][y])
-             result.push @[x][y]
-      return result
+  search: (fn) ->
+    result = []
+    for x in [0...CONFIG.rows]
+      for y in [0...CONFIG.cols]
+         if fn(@[x][y])
+           result.push @[x][y]
+    return result
 
+
+class Position
+  constructor: (x,y) ->
+    @x = x
+    @y = y
+  
+  next_x: -> Map.norm_x(@x+1)
+  next_y: -> Map.norm_y(@y+1)
+  prev_x: -> Map.norm_x(@x-1)
+  prev_y: -> Map.norm_y(@y-1)
+
+
+G =
   class Location
     constructor: (data, @type) ->
       [@x, @y] = data
@@ -52,6 +91,16 @@ class Game
   class Ant extends Location
     constructor: (data, @type=LAND_TYPES.ANT, @is_alive=yes) ->
       [@x, @y, @owner] = data
+    
+    neighbor: (direction) ->
+      G.neighbor(@x, @y, direction)
+
+    can_move: (direction) ->
+      pos = @neighbor(direction)
+      G.unoccupied(pos.x, pos.y)
+
+    move: (direction) ->
+      G.issue_order(@x,@y,direction)
 
   class Hill extends Location
     constructor: (data, @type=LAND_TYPES.HILL) ->
@@ -67,9 +116,9 @@ class Game
         state = @parse line.trim()
         switch state
           when "turn"
-            if CONFIG.turn > 0 then @MAP.reset()
+            if CONFIG.turn > 0 then MAP.reset()
           when "ready"
-            @MAP.reset()
+            MAP.reset()
             bot.ready()
             @finish_turn()
           when "go"
@@ -105,23 +154,33 @@ class Game
 
   # gets array of Location objects for the food for this turn
   food: -> @MAP.search (_) -> _.type is LAND_TYPES.FOOD
+
   # gets array of Location objects for water for ALL turns since the start
   water: -> @MAP.search (_) -> _.type is LAND_TYPES.WATER
+  
   # gets array of Location objects for the dead ants for this turn
   dead: -> @MAP.search (_) -> _.type is LAND_TYPES.ANT and not _.is_alive
+  
   # gets array of Ant objects for the player's ants for this turn
   my_ants: ->
     @MAP.search (_) -> _.type is LAND_TYPES.ANT and _.owner is 0 and _.is_alive
+  
   # gets array of Ant objects for the enemy's ants for this turn
   enemy_ants: ->
     @MAP.search (_) -> _.type is LAND_TYPES.ANT and _.owner isnt 0 and _.is_alive
+  
   enemy_hills: ->
     @MAP.search (_) -> _.type is LAND_TYPES.HILL and _.owner isnt 0
+  
   my_hills: ->
     @MAP.search (_) -> _.type is LAND_TYPES.HILL and _.owner is 0
 
   # any location which is not water is passable
   passable: (x, y) -> @MAP[x][y].type isnt LAND_TYPES.WATER
+
+  occupied: (x, y) -> @MAP[x][y].type of OCCUPIED
+
+  unoccupied: (x,y) -> @MAP[x][y].type of UNOCCUPIED
 
   # Puts orders for the ant at MAP[x][y] to head to one of 'N','E','S','W'
   issue_order: (x, y, direction) ->
@@ -196,7 +255,6 @@ class Game
       @distance location, loc1 > @distance location, loc2
     @food().sort comparing_distances
 
-(exports ? this).Game = Game
+(exports ? this).Game = G
 (exports ? this).LAND_TYPES = LAND_TYPES
 (exports ? this).CONFIG = CONFIG
-(exports ? this).CONFIG_COMMANDS = CONFIG_COMMANDS
