@@ -1,13 +1,17 @@
 debug = (require 'fs').createWriteStream 'Debug.dump'
 
-
-
-
+###
+  The Game Input Handler is responsible for parsing input from
+  the game server. It tries to not force any assumptions up on
+  the player code so most commands are simply transliterated
+  into method calls.
+###
 class GameInputHandler
 	constructor: (eventHandler) ->
 		@e = eventHandler
 	
-	run: (input = process.stdin) ->
+	run: () ->
+		input = process.stdin
 
 		cfg_parser = /^(\S+) (\S+)$/gm
 		turn_parser = /// ^
@@ -55,7 +59,10 @@ class GameInputHandler
 
 
 
-
+###
+ A trivial game client that also serves the purpose of debugging
+ the input parsing.
+###
 class DebugGameEventHandler
 	init:  (cfg)   -> process.stdout.write "go\n"
 	hill:  (r,c,o) -> debug.write "hill:  #{r} #{c} #{o}\n"
