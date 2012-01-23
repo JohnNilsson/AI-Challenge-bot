@@ -5,10 +5,9 @@ debug = (require 'fs').createWriteStream 'Debug.dump'
 
 class GameInputHandler
 	constructor: (eventHandler) ->
-		@e = eventHandler ? new BaseGameEventHandler()
+		@e = eventHandler
 	
-	run: ->
-		input = process.stdin
+	run: (input = process.stdin) ->
 
 		cfg_parser = /^(\S+) (\S+)$/gm
 		turn_parser = /// ^
