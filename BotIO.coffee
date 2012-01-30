@@ -1,40 +1,36 @@
+{EventEmitter} = require "events"
+
 ###
   This module is responsible for parsing input from, and render output to,
   the game server. It tries to not force any assumptions on
   the player code so most input are simply transliterated
   into events.
 ###
-{EventEmitter} = require "events"
 
-
-
-###
-  Output
-###
 output = process.stdout
-O =
-	north: (row, col) -> output.write "o #{row} #{col} N\n", 'ascii'
-	east:  (row, col) -> output.write "o #{row} #{col} E\n", 'ascii'
-	south: (row, col) -> output.write "o #{row} #{col} S\n", 'ascii'
-	west:  (row, col) -> output.write "o #{row} #{col} W\n", 'ascii'
-	go:               -> output.write "go\n", 'ascii'
-exports.OUT = O
-
-
-
-###
-  Input
-###
 input = process.stdin
-input.setEncoding('ascii')  # Pass 'data' input as string.
+
+input.setEncoding 'ascii'  # Pass 'data' input as string.
 
 input.on 'end', -> process.exit()
 
-I = new EventEmitter
-I.resume = -> 
-	input.resume()
 
 
+
+G = new EventEmitter
+
+G.startGame = -> input.resume()
+
+# Commands
+G.north = (row, col) -> output.write "o #{row} #{col} N\n", 'ascii'
+G.east  = (row, col) -> output.write "o #{row} #{col} E\n", 'ascii'
+G.south = (row, col) -> output.write "o #{row} #{col} S\n", 'ascii'
+G.west  = (row, col) -> output.write "o #{row} #{col} W\n", 'ascii'
+G.go    =            -> output.write "go\n", 'ascii'
+
+
+
+# Input
 
 turn_parser = /// ^
 	( h     # h row col owner # ant hill
@@ -53,13 +49,13 @@ $ ///gm
 parseTurn = (turnText) ->
 	while cmd = turn_parser.exec turnText
 		switch cmd[1]
-			when "h"    then I.emit "hill",  (parseInt cmd[2]), (parseInt cmd[3]), (parseInt cmd[4])
-			when "a"    then I.emit "ant",   (parseInt cmd[2]), (parseInt cmd[3]), (parseInt cmd[4])
-			when "w"    then I.emit "water", (parseInt cmd[2]), (parseInt cmd[3])
-			when "f"    then I.emit "food",  (parseInt cmd[2]), (parseInt cmd[3])
-			when "d"    then I.emit "dead",  (parseInt cmd[2]), (parseInt cmd[3]), (parseInt cmd[4])
-			when "turn" then I.emit "turn",   parseInt cmd[2]
-			when "go"   then I.emit "go"
+			when "h"    then G.emit "hill",  (parseInt cmd[2]), (parseInt cmd[3]), (parseInt cmd[4])
+			when "a"    then G.emit "ant",   (parseInt cmd[2]), (parseInt cmd[3]), (parseInt cmd[4])
+			when "w"    then G.emit "water", (parseInt cmd[2]), (parseInt cmd[3])
+			when "f"    then G.emit "food",  (parseInt cmd[2]), (parseInt cmd[3])
+			when "d"    then G.emit "dead",  (parseInt cmd[2]), (parseInt cmd[3]), (parseInt cmd[4])
+			when "turn" then G.emit "turn",   parseInt cmd[2]
+			when "go"   then G.emit "go"
 			when "end"  then return
 
 input.once 'data', (turnText) ->
@@ -68,6 +64,6 @@ input.once 'data', (turnText) ->
 	while setting = cfg_parser.exec turnText
 		cfg[setting[1]] = setting[2]
 	input.on 'data', parseTurn
-	I.emit "ready", cfg
+	G.emit "ready", cfg
 
-exports.IN = I
+module.exports = G

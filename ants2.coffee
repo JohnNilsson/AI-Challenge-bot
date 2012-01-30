@@ -1,10 +1,12 @@
+Game = require "./BotIo.coffee"
+
 ###
  A bot doing nothing. A base class to avoid implementing stubs.
 ###
 class NoopBot
-	constructor: (i,o) ->
-		i.on "ready", -> o.go()
-		i.on "go", -> o.go()
+	constructor: (game) ->
+		game.on "ready", -> o.go()
+		game.on "go", -> o.go()
 
 
 ###
@@ -12,28 +14,16 @@ class NoopBot
  the input parsing.
 ###
 class DebugBot extends NoopBot
-	constructor: (@in, @out) ->
-		super @in, @out
+	constructor: (game) ->
+		super game
 		debug = process.stderr
-		@in.on "hill",  (r,c,o) -> debug.write "hill:  #{r} #{c} #{o}\n"
-		@in.on "ant",   (r,c,o) -> debug.write "ant:   #{r} #{c} #{o}\n"
-		@in.on "water", (r,c)   -> debug.write "water: #{r} #{c}\n"
-		@in.on "food",  (r,c)   -> debug.write "food:  #{r} #{c}\n"
-		@in.on "dead",  (r,c,o) -> debug.write "dead:  #{r} #{c} #{o}\n"
-		@in.on "turn",  (n)     -> debug.write "turn:  #{n}\n"
+		game.on "hill",  (r,c,o) -> debug.write "hill:  #{r} #{c} #{o}\n"
+		game.on "ant",   (r,c,o) -> debug.write "ant:   #{r} #{c} #{o}\n"
+		game.on "water", (r,c)   -> debug.write "water: #{r} #{c}\n"
+		game.on "food",  (r,c)   -> debug.write "food:  #{r} #{c}\n"
+		game.on "dead",  (r,c,o) -> debug.write "dead:  #{r} #{c} #{o}\n"
+		game.on "turn",  (n)     -> debug.write "turn:  #{n}\n"
 
-###
- The tutorial step 1 bot.
-###
-# class Step1Bot extends NoopBot
-# 	debug = process.stderr
-# 	map: {}
-# 	constructor: (@game) ->
-# 	ant: (row, col, owner) =>
-# 		@map[row][col] = owner
+bot = new DebugBot(Game)
 
-{IN, OUT} = require "./BotIo.coffee"
-
-bot = new DebugBot(IN, OUT)
-
-IN.resume()
+Game.startGame()

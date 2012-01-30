@@ -101,15 +101,9 @@ class Map
 		for row in @tiles
 			stream.write "m "+(tile.toString() for tile in row).join("") + "\n"
 
-	constructor: (@height, @width, game) ->
+	constructor: (@height, @width) ->
 		@tiles = createTiles height, width
 		@ants = []
 		@food = []
-		game.on "go", @resetMap
-		game.on "ant", @markAntOnMap
-		game.on "ant", @markTileAsLand
-		game.on "water", @markTileAsWater
-		game.on "food", @markFoodOnMap
-		game.on "hill", @markTileAsHill
 
-exports.Map = Map
+module.exports = Map
