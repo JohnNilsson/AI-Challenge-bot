@@ -7,17 +7,19 @@
 {EventEmitter} = require "events"
 
 
+
 ###
   Output
 ###
 output = process.stdout
 O =
-	north: (row, col) -> output.write "#{row} #{col} N\n", 'ascii'
-	east:  (row, col) -> output.write "#{row} #{col} E\n", 'ascii'
-	south: (row, col) -> output.write "#{row} #{col} S\n", 'ascii'
-	west:  (row, col) -> output.write "#{row} #{col} W\n", 'ascii'
+	north: (row, col) -> output.write "o #{row} #{col} N\n", 'ascii'
+	east:  (row, col) -> output.write "o #{row} #{col} E\n", 'ascii'
+	south: (row, col) -> output.write "o #{row} #{col} S\n", 'ascii'
+	west:  (row, col) -> output.write "o #{row} #{col} W\n", 'ascii'
 	go:               -> output.write "go\n", 'ascii'
-(exports ? this).OUT = O
+exports.OUT = O
+
 
 
 ###
@@ -25,11 +27,13 @@ O =
 ###
 input = process.stdin
 input.setEncoding('ascii')  # Pass 'data' input as string.
-input.removeAllListeners()	# Just to be sure...
+
 input.on 'end', -> process.exit()
 
 I = new EventEmitter
-I.resume = -> input.resume()
+I.resume = -> 
+	input.resume()
+
 
 
 turn_parser = /// ^
@@ -66,4 +70,4 @@ input.once 'data', (turnText) ->
 	input.on 'data', parseTurn
 	I.emit "ready", cfg
 
-(exports ? this).IN = I
+exports.IN = I
