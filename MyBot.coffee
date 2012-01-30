@@ -1,18 +1,15 @@
-CONFIG = require('./ants').CONFIG
-ants = require('./ants').Game
+{IN, OUT} = require "./BotIo.coffee"
 
-directions = ['N', 'E', 'S', 'W']
+MAP = null
 
-class Bot
-  # You can setup stuff here, before the first turn starts:
-  ready: ->
+IN.on "ready", (cfg) ->
+	{Map} = require "./Map.coffee"
+	MAP = new Map(cfg.rows,cfg.cols, IN)
+	MAP.print process.stderr
+	OUT.go()
 
-  # Here are the orders to the ants, executed each turn:
-  do_turn: -> 
-    for ant in ants.my_ants()
-      for dir in directions
-        if ant.can_move dir
-          ant.move dir
-          break
+IN.on "go", -> 
+	MAP.print process.stderr
+	OUT.go()
 
-ants.run new Bot()
+IN.resume()
