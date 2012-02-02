@@ -11,12 +11,15 @@ Game.on "ready", (cfg) ->
 	Game.on "food",  MAP.markFoodOnMap
 	Game.on "food",  MAP.markTileAsLand
 	Game.on "hill",  MAP.markTileAsHill
-
-	MAP.print process.stderr
 	Game.go()
 
 Game.on "go", -> 
-	MAP.print process.stderr
+	for ant in MAP.myAnts()
+		for dir in ['north', 'east', 'south', 'west']
+			[r, c] = [ant.tile.row, ant.tile.col]
+			if ant.go dir
+				Game[dir] r,c
+				break
 	Game.go()
 
 Game.startGame()

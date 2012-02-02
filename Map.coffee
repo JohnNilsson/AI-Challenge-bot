@@ -22,46 +22,69 @@ FOOD    = '*'
 
 class Ant
 	constructor: (@owner, @tile) ->
+
 	toString: ->
 		if @tile.type == @owner # The only hill an ant can occupy
 			ANT[@owner].toUpperCase()
 		else
 			ANT[@owner]
 
+	go: (dir) =>
+		t = @tile[dir]
+		if t.type == UNSEEN
+			t.type = LAND
+		# process.stderr.write ""+dir+"\n"
+		# process.stderr.write ""+@tile+"("+@tile.row+","+@tile.col+")"+"\n"
+		# process.stderr.write ""+t+"("+t.row+","+t.col+")"+"\n"
+		# process.stderr.write ""+t.isPassable()+"\n"
+		if t.isPassable()
+			@tile.occupant = null
+			t.occupant = @
+			@tile = t
+			return true
+		return false	
+
 class Food
 	constructor: (@tile) ->
 	toString: -> FOOD
 
 class Tile
-	constructor: (@x,@y) ->
+	constructor: (@row,@col) ->
 		@type = UNSEEN
 
 	toString: =>
 		if @occupant then @occupant.toString() else @type
 
+	isPassable: =>
+		# process.stderr.write "Occupant:"+@occupant+"\n"
+		# process.stderr.write "type:"+@type+"\n"
+		not @occupant && @type == LAND
+
 class Map
 	createTiles = (height, width) ->
 		tiles = new Array height
+		north = null
 		for row in [0...height]
-			tiles[row] = new Array width
+			tr = new Array width
+			tiles[row] = tr
+			west = null
 			for col in [0...width]
 				t = new Tile row, col
-				
-				if col > 0
-					t.left = tiles[row][col-1]
-					t.left.right = t
-
-				if col == width - 1
-					tiles[row][0].left = t
-				
-				if row > 0
-					t.up = tiles[row-1][col]
-					t.up.down = t
-				
-				if row == height - 1
-					tiles[0][col].up = t
-
-				tiles[row][col] = t
+				tr[col] = t
+				if west
+					t.west = west
+					west.east = t
+				if north
+					n = north[col]
+					t.north = n
+					n.south = t
+				west = t
+			tr[0].west = west
+			west.east = tr[0]
+			north = tr
+		for t in tiles[0]
+			t.north = north[t.col]
+			north[t.col] = t
 		tiles
 	
 	resetMap: =>
@@ -77,7 +100,7 @@ class Map
 		tile = @tiles[row][col]
 		ant = new Ant(owner, tile)
 		tile.occupant = ant
-		ants = @ants[owner] or= []
+		ants = (@ants[owner] or= [])
 		ants.push ant
 	
 	markFoodOnMap: (row, col) =>
@@ -105,5 +128,7 @@ class Map
 		@tiles = createTiles height, width
 		@ants = []
 		@food = []
+
+	myAnts: => @ants[0]
 
 module.exports = Map
