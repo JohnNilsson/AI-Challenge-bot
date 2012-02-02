@@ -1,0 +1,1 @@
+/C/opt/pypy-1.7/pypy.exe ../tools/playgame.py --engine_seed 42 --player_seed 42 --food none --end_wait=0.25 --verbose --log_dir game_logs --turns 30 --map_file ../tools/submission_test/test.map "coffee.cmd $1" "/C/opt/pypy-1.7/pypy.exe ../tools/submission_test/TestBot.py" --nolaunch -e --strict --capture_errors -So | java -jar ../tools/visualizer.jar
