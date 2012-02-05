@@ -12,9 +12,6 @@ input = process.stdin
 
 input.setEncoding 'ascii'  # Pass 'data' input as string.
 
-input.on 'end', -> process.exit()
-
-
 
 
 G = new EventEmitter
