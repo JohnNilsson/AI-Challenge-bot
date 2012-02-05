@@ -29,6 +29,11 @@ class Ant
 		else
 			ANT[@owner]
 
+	possibleMoves: =>
+		dirs = ['west', 'north', 'east', 'south']
+		passable = ( @tile[dir].isPassable() for dir in dirs )
+		(dir for dir in dirs when @tile[dir].isPassable())
+
 	go: (dir) =>
 		t = @tile[dir]
 		if t.type == UNSEEN
@@ -56,9 +61,7 @@ class Tile
 		if @occupant then @occupant.toString() else @type
 
 	isPassable: =>
-		# process.stderr.write "Occupant:"+@occupant+"\n"
-		# process.stderr.write "type:"+@type+"\n"
-		not @occupant && @type == LAND
+		not @occupant && (@type == LAND || @type == UNSEEN)
 
 class Map
 	createTiles = (height, width) ->
