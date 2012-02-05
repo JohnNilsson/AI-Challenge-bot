@@ -86,9 +86,9 @@ class Map
 			t.north = north[t.col]
 			north[t.col] = t
 		tiles
-	
+
 	resetMap: =>
-		for as in @ants
+		for as in @ants[1...@ants.length]
 			for a in as
 				a.tile.occupant = null
 		@ants = []
@@ -98,6 +98,8 @@ class Map
 
 	markAntOnMap: (row, col, owner) =>
 		tile = @tiles[row][col]
+		if owner == 0 && tile.occupant == 0
+			return # This is our ant
 		ant = new Ant(owner, tile)
 		tile.occupant = ant
 		ants = (@ants[owner] or= [])
