@@ -1,7 +1,32 @@
 Game = require "./BotIo.coffee"
 Map = require "./Map.coffee"
 
+
+class FirstPassableDirStrategy
+	move: (ant) ->
+		if dir = ant.possibleMoves()[0]
+			Game[dir] ant.tile.row, ant.tile.col
+			ant.go dir
+
+class DecayStrategy
+	constructor: (Game) ->
+		Game.on "go", ->
+			for row in MAP.tiles
+				for tile in row
+					tile.scent = Math.max(tile.scent ? 0 - 1, 0)
+
+	move: (ant) ->
+		ant.tile.scent = 9
+		dirs = ant.possibleMoves()
+		dirs.sort (a,b) -> ant.tile[a].scent - ant.tile[b].scent # Preferr weakest scent
+		# process.stderr.write "Option: #{("#{dir}:#{ant.tile[dir].scent}" for dir in dirs)}\n"
+		if dir = dirs[0]
+			Game[dir] ant.tile.row, ant.tile.col
+			ant.go dir
+
 MAP = null
+STRATEGY = new DecayStrategy(Game)
+
 Game.on "ready", (cfg) ->
 	MAP = new Map(cfg.rows, cfg.cols)
 	Game.on "go",    MAP.resetMap
@@ -13,13 +38,9 @@ Game.on "ready", (cfg) ->
 	Game.on "hill",  MAP.markTileAsHill
 	Game.go()
 
-Game.on "go", -> 
-	for ant in MAP.myAnts()
-		for dir in ['north', 'east', 'south', 'west']
-			[r, c] = [ant.tile.row, ant.tile.col]
-			if ant.go dir
-				Game[dir] r,c
-				break
+Game.on "go", ->
+	STRATEGY.move(ant) for ant in MAP.myAnts()
 	Game.go()
 
 Game.startGame()
+
