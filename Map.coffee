@@ -42,7 +42,7 @@ class Ant
 			t.occupant = @
 			@tile = t
 			return true
-		return false	
+		return false
 
 class Food
 	constructor: (@tile) ->
@@ -102,24 +102,24 @@ class Map
 		tile.occupant = ant
 		ants = (@ants[owner] or= [])
 		ants.push ant
-	
+
 	markFoodOnMap: (row, col) =>
 		t = @tiles[row][col]
 		food = new Food(tile)
 		tile.occupant = food
-		@food.push food			
+		@food.push food
 
-	markTileAsWater: (row, col) => 
+	markTileAsWater: (row, col) =>
 		@tiles[row][col].type = WATER
-	
+
 	markTileAsLand: (row, col) =>
 		t = @tiles[row][col]
 		if t.type == UNSEEN
-			t.type = LAND 
-	
+			t.type = LAND
+
 	markTileAsHill: (row, col, owner) =>
 		@tiles[row][col].type = owner
-	
+
 	print: (stream) =>
 		for row in @tiles
 			stream.write "m "+(tile.toString() for tile in row).join("") + "\n"
