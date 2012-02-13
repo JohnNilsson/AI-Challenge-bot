@@ -19,6 +19,7 @@ WATER   = '%'
 UNSEEN  = '?'
 ANT     = ['a','b','c','d','e','f','g','h','i','j']
 FOOD    = '*'
+MYHILL  = 0
 
 class Ant
 	constructor: (@owner, @tile) ->
@@ -61,7 +62,7 @@ class Tile
 		if @occupant then @occupant.toString() else @type
 
 	isPassable: =>
-		not @occupant && (@type == LAND || @type == UNSEEN)
+		not @occupant && (@type == LAND || @type == MYHILL || @type == UNSEEN)
 
 class Map
 	createTiles = (height, width) ->

@@ -9,11 +9,17 @@ class FirstPassableDirStrategy
 			ant.go dir
 
 class DecayStrategy
+	printMap = ->
+		for row in MAP.tiles
+			for tile in row
+				process.stderr.write "" + (tile.occupant ? if tile.scent > 0 then tile.scent else '.')
+			process.stderr.write "\n"
+
 	constructor: (Game) ->
 		Game.on "go", ->
 			for row in MAP.tiles
 				for tile in row
-					tile.scent = Math.max(tile.scent ? 0 - 1, 0)
+					tile.scent = Math.max (tile.scent ? 0) - 1, 0
 
 	move: (ant) ->
 		ant.tile.scent = 9
@@ -24,10 +30,12 @@ class DecayStrategy
 			Game[dir] ant.tile.row, ant.tile.col
 			ant.go dir
 
+
 MAP = null
 STRATEGY = new DecayStrategy(Game)
 
 Game.on "ready", (cfg) ->
+	process.stderr.write "ready\n"
 	MAP = new Map(cfg.rows, cfg.cols)
 	Game.on "go",    MAP.resetMap
 	Game.on "ant",   MAP.markAntOnMap
