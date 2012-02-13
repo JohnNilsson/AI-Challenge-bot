@@ -88,7 +88,7 @@ class Map
 			north = tr
 		for t in tiles[0]
 			t.north = north[t.col]
-			north[t.col] = t
+			north[t.col].south = t
 		tiles
 
 	resetMap: =>
