@@ -109,7 +109,7 @@ class Map
 		ants.push ant
 
 	markFoodOnMap: (row, col) =>
-		t = @tiles[row][col]
+		tile = @tiles[row][col]
 		food = new Food(tile)
 		tile.occupant = food
 		@food.push food

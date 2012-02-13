@@ -1,4 +1,4 @@
-Game = require "./BotIo.coffee"
+Game = require "./BotIO.coffee"
 Map = require "./Map.coffee"
 
 
